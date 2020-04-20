@@ -1,0 +1,58 @@
+@import "vars";
+@import "libs";
+
+body {
+	text-rendering: optimizeSpeed;
+	background: #fff;
+	min-width: 320px;
+	margin: 0;
+	padding: 0;
+	font-family: monospace;
+	color: black;
+	font-weight: normal;
+	overflow-x: hidden;
+	user-select: none;
+}
+
+* {
+	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
+	@include inherit;
+
+	&:before,
+	&:after {
+		box-sizing: border-box;
+	}
+}
+
+ul,
+ol {
+	padding: 0;
+	margin: 0;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+	outline: none !important;
+}
+
+option {
+	cursor: pointer;
+	@include inherit;
+}
+
+@import "_main";
+@import "_media";

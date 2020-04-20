@@ -1,0 +1,59 @@
+body {
+  font: 10px monospace;
+}
+
+.axis {
+  path,
+  line {
+    fill: none;
+
+    shape-rendering: crispEdges;
+  }
+  &.x {
+    path {
+      &,
+      line {
+        stroke: #000;
+      }
+    }
+  }
+}
+
+.line {
+  fill: none;
+  stroke-width: 1.5px;
+}
+
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+svg {
+  overflow: visible;
+  margin: 20px 20px 30px 40px;
+}
+
+.focus {
+  padding: 2px;
+  overflow: hidden;
+  z-index: 9;
+  background-color: red;
+  text {
+    font-size: 14px;
+  }
+}
+
+
+.tooltip {
+  fill: white;
+  stroke: #000;
+}
+
+.tooltip {
+  &-name,
+  &-date,
+  &-likes {
+    font-weight: bold;
+  }
+}
