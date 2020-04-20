@@ -3,59 +3,18 @@ window.addEventListener('load', () => {
         margin = {top: 20, right: 20, bottom: 30, left: 40},
         width = +svg.attr("width") - margin.left - margin.right,
         height = +svg.attr("height") - margin.top - margin.bottom,
-        tooltip = { width: 210, height: 70, x: 10, y: -30 };
-
-    const x = d3.scaleTime()
-              .range([0, width]);
-    const y = d3.scaleLinear().range([height, 0]);
+        tooltip = { width: 180, height: 72, x: 10, y: -30 };
 
     $.ajax({
         url: "./files/data.json",
         method: "get",
         success: (dataToProceed) => {
-            svg.selectAll("*").remove();
-            const prop = 'First Line Data';
-            const prop2 = 'Second Line Data';
-            const prop3 = 'Arrows Data';
-            const propForDirect = 'direct';
-            const propForReverse = 'reverse';
-            /*const directData = dataToProceed[prop3].filter((i) => {
-                if (propForDirect === i.type_of_rho) return i;
-            });
-            const reverseData = dataToProceed[prop3].filter((i) => {
-                if (propForReverse === i.type_of_rho) return i;
-            });
-
-            //Histogram
-            histogram(directData, svg, {
+            let proceededData = dataToProceed;
+            renderPlot(proceededData, svg, {
                 margin,
-                x,
-                y,
                 width,
                 height,
-                color: '#0F0',
-            });*/
-            // Lines
-            chart(dataToProceed[prop], svg, {
-                margin,
-                x,
-                y,
-                width,
-                height,
-                prop,
-                tooltip,
-                color: '#00f',
-                axis: 'Left',
-            });
-            chart(dataToProceed[prop2], svg, {
-                margin,
-                x,
-                y,
-                width,
-                height,
-                prop: prop2,
-                color: '#aaa',
-                axis: 'Right',
+                tooltip
             });
         },
         error: (data) => {
@@ -64,11 +23,131 @@ window.addEventListener('load', () => {
     });
 });
 
+function renderPlot(dataToProceed, svg, obj) {
+    svg.selectAll("*").remove();
+    const { margin, width, height, tooltip } = obj;
+    const prop = 'First Line Data';
+    const prop2 = 'Second Line Data';
+    const prop3 = 'Arrows Data';
+    const propForDirect = 'direct';
+    const propForReverse = 'reverse';
+    const directData = dataToProceed[prop3].filter((i) => {
+        if (propForDirect === i.type_of_rho) return i;
+    });
+    const reverseData = dataToProceed[prop3].filter((i) => {
+        if (propForReverse === i.type_of_rho) return i;
+    });
+
+
+    // Dates functs
+    const bisectDate = d3.bisector(function(d) { return d.date; }).left;
+
+    //Histogram
+    histogram(directData, svg, {
+        margin,
+        width,
+        height,
+        color: '#0F0',
+    });
+    // Lines
+    const chart0 = (prop in dataToProceed) ? chart(dataToProceed[prop], svg, {
+        margin,
+        width,
+        height,
+        prop,
+        color: '#00f',
+        axis: 'Left',
+    }) : null;
+    const chart1 = (prop2 in dataToProceed) ? chart(dataToProceed[prop2], svg, {
+        margin,
+        width,
+        height,
+        prop: prop2,
+        color: '#aaa',
+        axis: 'Right',
+    }): null;
+
+    // Tooltip
+    const focus = svg.append("g")
+        .attr("class", "focus")
+        .style("display", "none");
+
+    focus.append("circle")
+        .attr("r", 5);
+
+    focus.append("rect")
+        .attr("class", "tooltip")
+        .attr("width", tooltip.width)
+        .attr("height", tooltip.height)
+        .attr("x", 10)
+        .attr("y", -22)
+        .attr("rx", 4)
+        .attr("ry", 4);
+
+    focus.append("text")
+        .attr("class", "tooltip-name")
+        .attr("x", 18)
+        .attr("y", -2);
+
+    focus.append("text")
+        .attr("class", "tooltip-date-name")
+        .attr("x", 18)
+        .attr("y", 18)
+        .text("Date:");
+
+    focus.append("text")
+        .attr("class", "tooltip-date")
+        .attr("x", 70)
+        .attr("y", 18);
+
+    focus.append("text")
+        .attr("x", 18)
+        .attr("y", 38)
+        .text("Value:");
+
+    focus.append("text")
+        .attr("class", "tooltip-likes")
+        .attr("x", 70)
+        .attr("y", 38);
+
+    svg.on("mouseover", function() {
+        const line = event.target.closest('.line');
+        if (!line) return;
+        focus.style("display", null);
+    })
+        .on("mouseout", function() {
+            focus.style("display", "none");
+        })
+        .on("mousemove", mousemove);
+
+    function mousemove() {
+        const line = event.target.closest('.line');
+        if (!line) return;
+        const dataToRestructurize = line.classList.contains('line--1') ? chart1 : chart0;
+        const { data, x, y, color, prop } = dataToRestructurize;
+
+        if (!data) return;
+
+        const x0 = x.invert(d3.mouse(this)[0]),
+            i = bisectDate(data, x0, 1),
+            d0 = data[i - 1],
+            d1 = data[i],
+            d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        focus.select("circle").attr("fill", color);
+        focus.attr("transform", "translate(" + x(d.date) + "," + y(d.value) + ")");
+        focus.select(".tooltip-name").text(prop);
+        focus.select(".tooltip-date").text(() => {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+            const currDate = d.date;
+            return `${months[currDate.getMonth()]} ${currDate.getDate()}, ${currDate.getFullYear()}`;
+        });
+        focus.select(".tooltip-likes").text(d.value.toFixed(4));
+    }
+}
+
 function chart(data, svg, obj) {
     const {
         margin,
-        x,
-        y,
         width,
         height,
         prop,
@@ -76,11 +155,18 @@ function chart(data, svg, obj) {
         axis = 'Left',
     } = obj;
 
-    let counter = 0;
+    if (!this.counter) {
+        this.counter = 0;
+    }
     const axisPrefix = 'axis';
     const leftCondition = 'Left' === axis;
     const transformText = leftCondition ? 0 : 60;
     const transformAxe = leftCondition ? 0 : width;
+
+    const x = d3.scaleTime()
+        .range([0, width]);
+    const y = d3.scaleLinear().range([height, 0]);
+
     const xAxis = d3.axisBottom(x);
 
     const yAxis = d3[`${axisPrefix}${axis}`](y);
@@ -123,16 +209,26 @@ function chart(data, svg, obj) {
         .text(prop)
         .attr("stroke", color);
 
-    svg.select(".y path.domain")
-        .attr("stroke", color);
-
     svg.append("path")
         .datum(data)
-        .attr("class", `line line--${counter}`)
+        .attr("class", `line line--${this.counter}`)
         .attr("d", line)
-        .attr('stroke', color);
+        .attr('stroke', color)
+        .select(function() {
+                return this.previousElementSibling;
+            })
+        .select("path.domain")
+        .attr("stroke", color);
 
-    counter++;
+
+    return {
+        x,
+        y,
+        data,
+        prop,
+        color,
+        counter: this.counter++,
+    };
 }
 
 function histogram(rawData, svg, obj) {

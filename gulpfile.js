@@ -47,7 +47,7 @@ function scripts() {
 			presets: ['@babel/env'],
 			plugins: ['@babel/plugin-syntax-import-meta'],
 		}))
-		//.pipe(uglify()) // Minify JS (opt.)
+		.pipe(uglify()) // Minify JS (opt.)
 		.pipe(dest('app/js'))
 		.pipe(browserSync.stream())
 }
