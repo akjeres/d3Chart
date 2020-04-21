@@ -9,12 +9,20 @@ window.addEventListener('load', () => {
         url: "./files/data.json",
         method: "get",
         success: (dataToProceed) => {
+            const dataToGenerateXAxis = dataToProceed['First Line Data'].map(i => (new Date(i.date)));
+            const x = d3.scaleTime()
+                .range([0, width]);
+            const xAxis = d3.axisBottom(x);
+            x.domain(d3.extent(dataToGenerateXAxis, function(d) { return d; }));
+
             let proceededData = dataToProceed;
             renderPlot(proceededData, svg, {
                 margin,
                 width,
                 height,
-                tooltip
+                tooltip,
+                x,
+                xAxis
             });
         },
         error: (data) => {
@@ -25,7 +33,7 @@ window.addEventListener('load', () => {
 
 function renderPlot(dataToProceed, svg, obj) {
     svg.selectAll("*").remove();
-    const { margin, width, height, tooltip } = obj;
+    const { margin, width, height, tooltip, x, xAxis } = obj;
     const prop = 'First Line Data';
     const prop2 = 'Second Line Data';
     const prop3 = 'Arrows Data';
@@ -54,6 +62,8 @@ function renderPlot(dataToProceed, svg, obj) {
         margin,
         width,
         height,
+        x,
+        xAxis,
         prop,
         color: '#00f',
         axis: 'Left',
@@ -62,6 +72,8 @@ function renderPlot(dataToProceed, svg, obj) {
         margin,
         width,
         height,
+        x,
+        xAxis,
         prop: prop2,
         color: '#aaa',
         axis: 'Right',
@@ -118,7 +130,8 @@ function renderPlot(dataToProceed, svg, obj) {
         .on("mouseout", function() {
             focus.style("display", "none");
         })
-        .on("mousemove", mousemove);
+        .on("mousemove", mousemove)
+        .call(zoom);
 
     function mousemove() {
         const line = event.target.closest('.line');
@@ -143,6 +156,28 @@ function renderPlot(dataToProceed, svg, obj) {
         });
         focus.select(".tooltip-likes").text(d.value.toFixed(4));
     }
+
+    function zoom(svg) {
+        const extent = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
+
+        svg.on("mousemove", null)
+            .call(d3.zoom()
+            .scaleExtent([1, 10])
+            .translateExtent(extent)
+            .extent(extent)
+            .on("zoom", zoomed))
+            .on("mousemove", mousemove);
+
+        function zoomed() {
+            x.range([0, width].map(d => d3.event.transform.applyX(d)));
+            svg.selectAll(".x.axis").call(xAxis);
+            svg.selectAll('.line').each(function(d,i) {
+                const currentLine = d3.select(this);
+                const variable = currentLine.classed('line--0') ? chart0 : chart1;
+                currentLine.datum(variable.data).attr('d', variable.line);
+            });
+        }
+    }
 }
 
 function chart(data, svg, obj) {
@@ -150,6 +185,8 @@ function chart(data, svg, obj) {
         margin,
         width,
         height,
+        x,
+        xAxis,
         prop,
         color = '#ccc',
         axis = 'Left',
@@ -170,11 +207,7 @@ function chart(data, svg, obj) {
     const transformText = leftCondition ? 0 : 60;
     const transformAxe = leftCondition ? 0 : width;
 
-    const x = d3.scaleTime()
-        .range([0, width]);
     const y = d3.scaleLinear().range([height, 0]);
-
-    const xAxis = d3.axisBottom(x);
 
     const yAxis = d3[`${axisPrefix}${axis}`](y);
 
@@ -192,7 +225,6 @@ function chart(data, svg, obj) {
         d.value = +d.value;
     });
 
-    x.domain(d3.extent(data, function(d) { return d.date; }));
     y.domain(d3.extent(data, function(d) { return d.value; }));
 
     const existingAxeX = svg.select('g.x');
@@ -230,7 +262,10 @@ function chart(data, svg, obj) {
 
     return {
         x,
+        xAxis,
         y,
+        yAxis,
+        line,
         data,
         prop,
         color,
