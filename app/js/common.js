@@ -50,22 +50,22 @@ function renderPlot(dataToProceed, svg, obj) {
         color: '#0F0',
     });
     // Lines
-    const chart0 = (prop in dataToProceed) ? chart(dataToProceed[prop], svg, {
+    const chart0 = chart(dataToProceed[prop], svg, {
         margin,
         width,
         height,
         prop,
         color: '#00f',
         axis: 'Left',
-    }) : null;
-    const chart1 = (prop2 in dataToProceed) ? chart(dataToProceed[prop2], svg, {
+    });
+    const chart1 = chart(dataToProceed[prop2], svg, {
         margin,
         width,
         height,
         prop: prop2,
         color: '#aaa',
         axis: 'Right',
-    }): null;
+    });
 
     // Tooltip
     const focus = svg.append("g")
@@ -158,6 +158,13 @@ function chart(data, svg, obj) {
     if (!this.counter) {
         this.counter = 0;
     }
+
+    if (!data) {
+        return {
+            counter: this.counter++,
+        };
+    }
+
     const axisPrefix = 'axis';
     const leftCondition = 'Left' === axis;
     const transformText = leftCondition ? 0 : 60;
