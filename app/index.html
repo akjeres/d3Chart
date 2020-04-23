@@ -4,7 +4,7 @@
 
     <meta charset="utf-8">
 
-    <title>Plot | TenViz</title>
+    <title>Chart | TenViz</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
@@ -16,7 +16,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.15.1/d3.min.js"></script>
 </head>
 <body>
-    <svg width="1200" height="500"></svg>
+    <header class="header">
+        <div class="container">
+            <form>
+                <label class="first">
+                    <input hidden type="checkbox" name="First Line Data" value="1" checked>
+                    <span>First Line Data</span>
+                </label>
+                <label class="second">
+                    <input hidden type="checkbox" name="Second Line Data" value="1" checked>
+                    <span>Second Line Data</span>
+                </label>
+                <label class="direct">
+                    <input hidden type="checkbox" name="direct" value="1" checked>
+                    <span>Direct</span>
+                </label>
+                <label class="reverse">
+                    <input hidden type="checkbox" name="reverse" value="1" checked>
+                    <span>Reverse</span>
+                </label>
+            </form>
+        </div>
+    </header>
+    <div class="container">
+        <div class="svg_wrapper">
+            <svg width="1170" height="500"></svg>
+        </div>
+    </div>
     <script src="./js/common.js"></script>
 </body>
 </html>

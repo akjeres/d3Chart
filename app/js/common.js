@@ -1,6 +1,6 @@
 window.addEventListener('load', () => {
     const svg = d3.select("svg"),
-        margin = {top: 20, right: 20, bottom: 30, left: 40},
+        margin = {top: 0, right: 0, bottom: 0, left: 0},
         width = +svg.attr("width") - margin.left - margin.right,
         height = +svg.attr("height") - margin.top - margin.bottom,
         tooltip = { width: 180, height: 72, x: 10, y: -30 };
@@ -15,14 +15,24 @@ window.addEventListener('load', () => {
             const xAxis = d3.axisBottom(x);
             x.domain(d3.extent(dataToGenerateXAxis, function(d) { return d; }));
 
-            let proceededData = dataToProceed;
-            renderPlot(proceededData, svg, {
+            renderPlot(dataToProceed, svg, {
                 margin,
                 width,
                 height,
                 tooltip,
                 x,
                 xAxis
+            });
+
+            document.forms[0].addEventListener('change', () => {
+                renderPlot(proceedData(dataToProceed), svg, {
+                    margin,
+                    width,
+                    height,
+                    tooltip,
+                    x,
+                    xAxis
+                });
             });
         },
         error: (data) => {
@@ -75,7 +85,7 @@ function renderPlot(dataToProceed, svg, obj) {
         x,
         xAxis,
         prop: prop2,
-        color: '#aaa',
+        color: '#fdd023',
         axis: 'Right',
     });
 
@@ -204,12 +214,13 @@ function chart(data, svg, obj) {
 
     const axisPrefix = 'axis';
     const leftCondition = 'Left' === axis;
-    const transformText = leftCondition ? 0 : 60;
-    const transformAxe = leftCondition ? 0 : width;
+    const axisMenthod = leftCondition ? 'Right' : 'Left';
+    const transformText = leftCondition ? 0 : -105;
+    const transformAxe = leftCondition ? 0 : width - 1;
 
     const y = d3.scaleLinear().range([height, 0]);
 
-    const yAxis = d3[`${axisPrefix}${axis}`](y);
+    const yAxis = d3[`${axisPrefix}${axisMenthod}`](y);
 
     const line = d3.line()
         .x(function(d) { return x(d.date); })
@@ -242,7 +253,7 @@ function chart(data, svg, obj) {
         .call(yAxis)
         .append("text")
         .attr("transform", `rotate(-90) translate(0, ${transformText})`)
-        .attr("y", 6)
+        .attr("y", 45)
         .attr("dy", ".71em")
         .style("text-anchor", "end")
         .text(prop)
@@ -326,4 +337,43 @@ function histogram(rawData, svg, obj) {
             },
             fill: color
         });
+}
+
+function proceedData(obj) {
+    this.counter = 0;
+    if ('object' !== typeof obj) return obj;
+
+    const first  = 'First Line Data';
+    const second = 'Second Line Data';
+    const arrow  = 'Arrows Data';
+
+    const form = document.forms[0];
+    const flags = {};
+    Array.prototype.forEach.call(form.elements, (i) => {
+        flags[i.name] = i.checked;
+    });
+
+    const result = Object.assign({}, obj);
+    let arrowsData = [];
+    if (!flags[first]) delete result[first];
+    if (!flags[second]) delete result[second];
+
+    if (arrow in obj) {
+        arrowsData = obj[arrow].filter(i => {
+            switch (i.type_of_rho) {
+                case 'direct':
+                    return !!flags.direct;
+                    break;
+                case 'reverse':
+                    return !!flags.reverse;
+                    break;
+                default:
+                    return true;
+                    break;
+            }
+        });
+    }
+    result[arrow] = arrowsData;
+
+    return result;
 }

@@ -4,7 +4,7 @@
 body {
 	text-rendering: optimizeSpeed;
 	background: #fff;
-	min-width: 320px;
+	min-width: 1200px;
 	margin: 0;
 	padding: 0;
 	font-family: monospace;
@@ -54,5 +54,6 @@ option {
 	@include inherit;
 }
 
+@import "_header";
 @import "_main";
 @import "_media";
