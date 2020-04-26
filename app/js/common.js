@@ -15,7 +15,7 @@ window.addEventListener('load', () => {
             const xAxis = d3.axisBottom(x);
             x.domain(d3.extent(dataToGenerateXAxis, function(d) { return d; }));
 
-            renderPlot(dataToProceed, svg, {
+            renderChart(dataToProceed, svg, {
                 margin,
                 width,
                 height,
@@ -25,7 +25,7 @@ window.addEventListener('load', () => {
             });
 
             document.forms[0].addEventListener('change', () => {
-                renderPlot(proceedData(dataToProceed), svg, {
+                renderChart(proceedData(dataToProceed), svg, {
                     margin,
                     width,
                     height,
@@ -41,7 +41,7 @@ window.addEventListener('load', () => {
     });
 });
 
-function renderPlot(dataToProceed, svg, obj) {
+function renderChart(dataToProceed, svg, obj) {
     svg.selectAll("*").remove();
     const { margin, width, height, tooltip, x, xAxis } = obj;
     const prop = 'First Line Data';
@@ -49,12 +49,8 @@ function renderPlot(dataToProceed, svg, obj) {
     const prop3 = 'Arrows Data';
     const propForDirect = 'direct';
     const propForReverse = 'reverse';
-    const directData = dataToProceed[prop3].filter((i) => {
-        if (propForDirect === i.type_of_rho) return i;
-    });
-    const reverseData = dataToProceed[prop3].filter((i) => {
-        if (propForReverse === i.type_of_rho) return i;
-    });
+    const directData = dataToProceed[prop3].filter((i) => propForDirect === i.type_of_rho);
+    const reverseData = dataToProceed[prop3].filter((i) => propForReverse === i.type_of_rho);
 
 
     // Dates functs
@@ -62,10 +58,16 @@ function renderPlot(dataToProceed, svg, obj) {
 
     //Histogram
     histogram(directData, svg, {
-        margin,
-        width,
+        x,
+        prop: propForDirect,
         height,
         color: '#0F0',
+    });
+    histogram(reverseData, svg, {
+        x,
+        prop: propForReverse,
+        height,
+        color: '#F00',
     });
     // Lines
     const chart0 = chart(dataToProceed[prop], svg, {
@@ -186,6 +188,7 @@ function renderPlot(dataToProceed, svg, obj) {
                 const variable = currentLine.classed('line--0') ? chart0 : chart1;
                 currentLine.datum(variable.data).attr('d', variable.line);
             });
+            //svg.selectAll('.bar').call(xAxis);
         }
     }
 }
@@ -285,58 +288,19 @@ function chart(data, svg, obj) {
 }
 
 function histogram(rawData, svg, obj) {
-    return;
-    /*const { margin, x, y, width, height, color = "#5D6971" } = obj;
-    const xMin = new Date('2010-01-01');
-    const xMax = new Date('2019-04-18');
+    const { x, prop, height, color = "#5D6971" } = obj;
 
-    x.domain([xMin, xMax]);
-    console.log(rawData);
-    console.log(x);
-    var histogram = d3.histogram()
-        .value(function(d) { return d.price; })   // I need to give the vector of value
-        .domain(x.domain())  // then the domain of the graphic
-        .thresholds(x.ticks(width / 80)); // then the numbers of bins
-    console.log(histogram);*/
-    mycolor = d3.rgb("#ffffff");  // Pass in Hex
-
-    mycolor = d3.rgb(12, 67, 199);  // Red, Green, Blue
-    mycolor = d3.hsl(0, 100, 50);  //  Hue-Saturation-Lightness  (e.g. red)
-    mycolor = d3.hcl(-97, 32, 52);  // steelblue
-    mycolor = d3.lab(52, -4, -32);  // Lab color space (l, a, b); steelblue
-
-    // Make brighter and darker - Can be used for hovers
-    darkercolor = mycolor.darker(0.1);
-    lightercolor = mycolor.brighter(0.1);
-
-    //////////  DISPLAY COLORS  //////////
-    var svg = d3.select("svg")
-        .attr({
-            width: window.innerWidth,
-            height: window.innerHeight
-        });
-
-    //var color = d3.scale.category10();  // d3 has built-in Colors
-    //var color = d3.scale.category20();  // d3 has built-in Colors - Color Set 1
-    //var color = d3.scale.category20b();  // d3 has built-in Colors - Color Set 2
-    var color = d3.scale.category20c();  // d3 has built-in Colors - Color Set 3
-    var dataset = d3.range(20);
-    var barWidth = window.innerWidth / dataset.length;
-
-    // Print out colors
-    svg.selectAll("rect")
-        .data(dataset)
-        .enter()
-        .append("rect")
-        .attr({
-            width: barWidth,
-            height: height,
-            y: 0,
-            x: function (d, i) {
-                return barWidth * i;
-            },
-            fill: color
-        });
+    svg.selectAll(`.bar--${prop}`)
+        .data(rawData)
+        .enter().append("rect")
+        .attr("class", `bar bar--${prop}`)
+        .attr("fill", color)
+        .attr("x", function(d) { return x(new Date(d.min_period_id)); })
+        .attr("width", function(d) {
+            return (x(new Date(d.max_period_id)) - x(new Date(d.min_period_id)));
+        })
+        .attr("y", function(d) { return 0; })
+        .attr("height", function(d) { return height; });
 }
 
 function proceedData(obj) {
