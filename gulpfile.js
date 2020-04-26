@@ -17,7 +17,7 @@ const del          = require('del');
 
 function browsersync() {
 	browserSync.init({
-		server: { baseDir: 'app' },
+		server: { baseDir: 'docs' },
 		notify: false,
 		// online: false, // Work offline without internet connection
 	})
@@ -26,12 +26,12 @@ function browsersync() {
 // Custom Styles
 
 function styles() {
-	return src('app/sass/main.*')
+	return src('docs/sass/main.*')
 		.pipe(scss())
 		.pipe(concat('main.min.css'))
 		.pipe(autoprefixer({ overrideBrowserslist: ['last 15 versions'], grid: true }))
 		.pipe(cleancss( {level: { 1: { specialComments: 0 } } }))
-		.pipe(dest('app/css'))
+		.pipe(dest('docs/css'))
 		.pipe(browserSync.stream())
 }
 
@@ -40,7 +40,7 @@ function styles() {
 function scripts() {
 	return src([
 		// 'node_modules/jquery/dist/jquery.min.js', // npm vendor example (npm i --save-dev jquery)
-		'app/js/common.js' // common.js. Always at the end
+		'docs/js/common.js' // common.js. Always at the end
 	])
 		.pipe(concat('scripts.min.js'))
 		.pipe(babel({
@@ -48,16 +48,16 @@ function scripts() {
 			plugins: ['@babel/plugin-syntax-import-meta'],
 		}))
 		.pipe(uglify()) // Minify JS (opt.)
-		.pipe(dest('app/js'))
+		.pipe(dest('docs/js'))
 		.pipe(browserSync.stream())
 }
 
 // Watching
 
 function startwatch() {
-	watch('app/' + preprocessor + '/**/*', styles);
-	watch(['app/**/*.js', '!app/js/*.min.js'], scripts);
-	watch(['app/**/*.{' + fileswatch + '}']).on('change', browserSync.reload);
+	watch('docs/' + preprocessor + '/**/*', styles);
+	watch(['docs/**/*.js', '!docs/js/*.min.js'], scripts);
+	watch(['docs/**/*.{' + fileswatch + '}']).on('change', browserSync.reload);
 }
 
 exports.browsersync = browsersync;
