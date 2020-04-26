@@ -12,8 +12,12 @@ window.addEventListener('load', () => {
             const dataToGenerateXAxis = dataToProceed['First Line Data'].map(i => (new Date(i.date)));
             const x = d3.scaleTime()
                 .range([0, width]);
-            const xAxis = d3.axisBottom(x);
+            const xAxis = d3.axisBottom(x).ticks();
             x.domain(d3.extent(dataToGenerateXAxis, function(d) { return d; }));
+            svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
 
             renderChart(dataToProceed, svg, {
                 margin,
@@ -42,7 +46,7 @@ window.addEventListener('load', () => {
 });
 
 function renderChart(dataToProceed, svg, obj) {
-    svg.selectAll("*").remove();
+    svg.selectAll(".line, .bar, .y, .focus, g:not([class])").remove();
     const { margin, width, height, tooltip, x, xAxis } = obj;
     const prop = 'First Line Data';
     const prop2 = 'Second Line Data';
@@ -182,13 +186,26 @@ function renderChart(dataToProceed, svg, obj) {
 
         function zoomed() {
             x.range([0, width].map(d => d3.event.transform.applyX(d)));
-            svg.selectAll(".x.axis").call(xAxis);
+            console.log(d3.event.transform);
+            svg.selectAll(".x.axis").call(xAxis.ticks(Math.round(10 * d3.event.transform.k )));
             svg.selectAll('.line').each(function(d,i) {
                 const currentLine = d3.select(this);
                 const variable = currentLine.classed('line--0') ? chart0 : chart1;
                 currentLine.datum(variable.data).attr('d', variable.line);
             });
-            //svg.selectAll('.bar').call(xAxis);
+            svg.selectAll('.bar').remove();
+            histogram(directData, svg, {
+                x,
+                prop: propForDirect,
+                height,
+                color: '#0F0',
+            });
+            histogram(reverseData, svg, {
+                x,
+                prop: propForReverse,
+                height,
+                color: '#F00',
+            });
         }
     }
 }
@@ -241,15 +258,6 @@ function chart(data, svg, obj) {
 
     y.domain(d3.extent(data, function(d) { return d.value; }));
 
-    const existingAxeX = svg.select('g.x');
-    const axisXcondition = existingAxeX && existingAxeX._groups && existingAxeX._groups[0] && existingAxeX._groups[0][0];
-    if (!axisXcondition) {
-        svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis);
-    }
-
     svg.append("g")
         .attr("class", "y axis")
         .attr("transform", `translate(${transformAxe}, 0)`)
@@ -290,9 +298,11 @@ function chart(data, svg, obj) {
 function histogram(rawData, svg, obj) {
     const { x, prop, height, color = "#5D6971" } = obj;
 
-    svg.selectAll(`.bar--${prop}`)
-        .data(rawData)
-        .enter().append("rect")
+    const bars = svg.selectAll(`.bar--${prop}`);
+    const axeX = '.x.axis';
+
+    bars.data(rawData)
+        .enter().insert("rect", axeX)
         .attr("class", `bar bar--${prop}`)
         .attr("fill", color)
         .attr("x", function(d) { return x(new Date(d.min_period_id)); })
